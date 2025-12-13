@@ -1,6 +1,6 @@
 @echo off
 echo Compiling FP4 FFT Memory Testbench...
-iverilog -o sim.vvp src/memory.v tb/tb_memory.v
+iverilog -o sim.vvp src/memory_dff.v tb/tb_memory.v
 
 echo.
 echo Running Simulation...
