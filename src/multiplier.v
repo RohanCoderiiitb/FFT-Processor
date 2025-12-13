@@ -1,6 +1,6 @@
 // Module for complex multiplication
 
-// Main module name is fp4_cmul. Uses 2 helper modules : fp4_mul(multiplying 2 FP4 numbers) and fp4_add_sub
+// Main module name is fp4_cmul. Uses 2 helper modules : fp4_mul(multiplying 2 FP4 numbers) and fp4_add_sub(adding or subtracting 2 FP4 numbers)
 
 //E2M1 format is used: 1 sign bit(MSB bit = 3), 2 exponent bits(bits 2 and 1), 1 mantissa bit(LSB bit = 1)
 
@@ -26,18 +26,20 @@ module fp4_mul(
     wire signed [3:0] exp_temp = $signed({1'b0, exp_sum}) - 4'sd1;
 
     //Normalization and Rounding off
-    wire [2:0] sig_a = 3'd2 + mant_a; 
-    wire [2:0] sig_b = 3'd2 + mant_b;
+    wire hidden_a = (exp_a != 2'b00);
+    wire hidden_b = (exp_b != 2'b00);
+    wire [2:0] sig_a = {1'b0, hidden_a, mant_a};
+    wire [2:0] sig_b = {1'b0, hidden_b, mant_b};
     wire [4:0] prod = sig_a * sig_b;
     wire need_norm = (prod >= 5'd8);
     wire [4:0] prod_norm = (need_norm) ? (prod >> 1) : prod;
     wire signed [3:0] exp_norm = (need_norm) ? (exp_temp + 1) : exp_temp;
-    wire mant_out = (prod_norm >= 5'd5);
+    wire mant_out = (exp_norm == 0) ? prod_norm[1] : (prod_norm >= 5'd5);
 
     //Preparing the output
     reg [3:0] output_reg;
     always @(*) begin
-        if(a_zero || b_zero || exp_norm<=0) begin
+        if(a_zero || b_zero || exp_norm<0) begin
             output_reg = 4'b0000;
         end
         else if(exp_norm > 3) begin
@@ -72,7 +74,8 @@ module fp4_cmul (
 
     wire [3:0] res_real;
     wire [3:0] res_imag;
-    //Waiting for the adder subtractor modules to be ready for instantiation...
+    fp4_add_sub s1(.a(ac), .b(bd), .sub(1'b1), .out(res_real));
+    fp4_add_sub a1(.a(ad), .b(bc), .sub(1'b0), .out(res_imag));
     assign out_real = res_real;
     assign out_imag = res_imag;
 endmodule

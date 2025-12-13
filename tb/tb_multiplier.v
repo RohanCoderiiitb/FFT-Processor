@@ -1,58 +1,59 @@
-//Testbench for testing the multiplier
-//Right now tests the fp4_mul 
-
 `timescale 1ns / 1ps
 
-module tb_fp4_mul;
+module tb_fp4_cmul;
 
-    // Inputs
-    reg [3:0] a;
-    reg [3:0] b;
+    // Inputs: z1 = a + jb, z2 = c + jd
+    reg [3:0] a, b, c, d;
 
     // Outputs
-    wire [3:0] out;
+    wire [3:0] out_real, out_imag;
 
-    // Instantiate the Unit Under Test (UUT)
-    fp4_mul uut (
-        .a(a), 
-        .b(b), 
-        .out(out)
+    // Instantiate the Complex Multiplier
+    fp4_cmul uut (
+        .a(a), .b(b), 
+        .c(c), .d(d), 
+        .out_real(out_real), 
+        .out_imag(out_imag)
     );
 
-    // Variable to help loop through tests if needed
-    integer i;
+    // Helper parameters for readable values
+    localparam ZERO   = 4'b0000; // 0.0
+    localparam ONE    = 4'b0010; // 1.0
+    localparam NEG_1  = 4'b1010; // -1.0
+    localparam ONE_PT_5 = 4'b0011; // 1.5
+    localparam TWO    = 4'b0100; // 2.0
 
     initial begin
-        $dumpfile("fp4_mul.vcd");
-        $dumpvars(0, tb_fp4_mul);
+        // Monitor changes automatically
+        $monitor("Time=%0t | z1=(%b + j%b) * z2=(%b + j%b) | Out = %b + j%b", 
+                 $time, a, b, c, d, out_real, out_imag);
 
-        $display("Time |   A (Hex)  |   B (Hex)  | Out (Hex) |");
-        $display("--------------------------------------------");
-
-        a = 4'b0010; b = 4'b0010;
+        // 1. Identity: (1 + j0) * (1 + j0)
+        // Expect: 1 + j0
+        a = ONE; b = ZERO; c = ONE; d = ZERO;
         #10;
-        $display("%4t | %b (1.0) | %b (1.0) | %b", $time, a, b, out);
 
-        a = 4'b0011; b = 4'b0100;
+        // 2. Imaginary Unit: (0 + j1) * (0 + j1)
+        // Expect: -1 + j0 (Remember -1 is 1010)
+        a = ZERO; b = ONE; c = ZERO; d = ONE;
         #10;
-        $display("%4t | %b (1.5) | %b (2.0) | %b", $time, a, b, out);
 
-        a = 4'b0011; b = 4'b0011;
+        // 3. Rotation: (1 + j0) * (0 + j1)
+        // Expect: 0 + j1
+        a = ONE; b = ZERO; c = ZERO; d = ONE;
         #10;
-        $display("%4t | %b (1.5) | %b (1.5) | %b", $time, a, b, out);
 
-        a = 4'b0000; b = 4'b0111;
+        // 4. Conjugate: (1 + j1) * (1 - j1)
+        // Expect: 2 + j0 (2.0 is 0100)
+        a = ONE; b = ONE; c = ONE; d = NEG_1;
         #10;
-        $display("%4t | %b (0.0) | %b (6.0) | %b", $time, a, b, out);
 
-        a = 4'b0111; b = 4'b0111;
+        // 5. Scaling: (1.5 + j0) * (0 + j2)
+        // Expect: 0 + j3 (3.0 is 0101)
+        a = ONE_PT_5; b = ZERO; c = ZERO; d = TWO;
         #10;
-        $display("%4t | %b (6.0) | %b (6.0) | %b", $time, a, b, out);
 
-        a = 4'b1010; b = 4'b0011;
-        #10;
-        $display("%4t | %b(-1.0) | %b (1.5) | %b", $time, a, b, out);
-        
         $finish;
     end
+
 endmodule

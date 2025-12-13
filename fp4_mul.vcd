@@ -1,5 +1,5 @@
 $date
-	Fri Dec 12 14:53:47 2025
+	Sat Dec 13 19:50:28 2025
 $end
 $version
 	Icarus Verilog
@@ -28,12 +28,14 @@ $var wire 1 0 need_norm $end
 $var wire 1 1 mant_out $end
 $var wire 1 2 mant_b $end
 $var wire 1 3 mant_a $end
-$var wire 4 4 exp_temp [3:0] $end
-$var wire 3 5 exp_sum [2:0] $end
-$var wire 4 6 exp_norm [3:0] $end
-$var wire 2 7 exp_b [1:0] $end
-$var wire 2 8 exp_a [1:0] $end
-$var reg 4 9 output_reg [3:0] $end
+$var wire 1 4 hidden_b $end
+$var wire 1 5 hidden_a $end
+$var wire 4 6 exp_temp [3:0] $end
+$var wire 3 7 exp_sum [2:0] $end
+$var wire 4 8 exp_norm [3:0] $end
+$var wire 2 9 exp_b [1:0] $end
+$var wire 2 : exp_a [1:0] $end
+$var reg 4 ; output_reg [3:0] $end
 $upscope $end
 $upscope $end
 $enddefinitions $end
@@ -42,12 +44,14 @@ $dumpall
 $end
 #0
 $dumpvars
-b10 9
+b10 ;
+b1 :
+b1 9
 b1 8
-b1 7
+b10 7
 b1 6
-b10 5
-b1 4
+15
+14
 03
 02
 01
@@ -71,13 +75,13 @@ $end
 #10000
 b101 !
 b101 (
-b101 9
-b10 6
+b101 ;
 11
+b10 8
 b110 .
-b10 4
-b11 5
-b10 7
+b10 6
+b11 7
+b10 9
 b110 /
 b11 -
 13
@@ -88,12 +92,12 @@ b11 $
 #20000
 b100 !
 b100 (
-b100 9
+b100 ;
 01
 b100 .
-b1 4
-b10 5
-b1 7
+b1 6
+b10 7
+b1 9
 10
 b1001 /
 b11 ,
@@ -103,17 +107,17 @@ b11 &
 #30000
 b0 !
 b0 (
-b0 9
+b0 ;
 1%
-11
-b110 .
+b0 .
+b11 9
+b10 6
 b11 7
-b10 4
-b11 5
-b0 8
+05
+b0 :
 00
-b110 /
-b10 -
+b0 /
+b0 -
 03
 b111 #
 b111 &
@@ -122,33 +126,33 @@ b0 $
 #40000
 b111 !
 b111 (
-b111 9
-0%
-b110 6
-01
+b111 ;
 b100 .
-b101 4
-b110 5
-b11 8
+0%
+b110 8
+b101 6
+b110 7
 10
+15
+b11 :
 b1001 /
 b11 -
 13
 b111 "
 b111 $
 #50000
+11
 b1011 !
 b1011 (
-b1011 9
+b1011 ;
 1)
-11
 b110 .
-b1 6
-b1 7
-1+
-b1 4
-b10 5
 b1 8
+b1 9
+1+
+b1 6
+b10 7
+b1 :
 00
 b110 /
 b10 -
