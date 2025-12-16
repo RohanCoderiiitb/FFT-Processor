@@ -13,7 +13,7 @@ module dff_8bit (
     end
 endmodule
 
-module fp4_fft_memory_dff (
+module fp4_fft_memory_reg (
     input wire clk,
     input wire rst,
     input wire bank_sel,
