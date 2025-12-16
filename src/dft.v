@@ -40,7 +40,7 @@ module twiddle_factor #(
     end
 
     always @(*) begin
-        case(scaled_k%MAX_N)
+        case(scaled_k%MAX_N) 
             5'd0: begin twiddle_out = 8'b00100000; end // 1 + j0
             5'd1: begin twiddle_out = 8'b00100000; end // 0.98 - j0.19 -> approx 1 + j0
             5'd2: begin twiddle_out = 8'b00101001; end // 0.92 - j0.38 -> approx 1 - 0.5j
