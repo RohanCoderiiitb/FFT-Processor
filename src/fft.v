@@ -1,0 +1,1 @@
+//structyre (similar to dft)- twiddle, fft core (consisting of computation stages), fft top (consisting of bit reversal, memory reads and writes)
