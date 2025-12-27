@@ -240,12 +240,24 @@ module fp4_fft_top #(
         .next_step(next_step)
     );
 
+    //Defining an is_processing flag that tells whether the processor is in the middle of FFT computation or not
+    reg is_processing;
+    always @(posedge clk or negedge rst) begin
+        if(!rst) begin
+            is_processing <= 1'b0;       //Setting the flag to default value of 0 on reset
+        end
+        else if(start) begin
+            is_processing <= 1'b1;       //Computation in progress
+        end
+        else if(done) begin
+            is_processing <= 1'b0;       //Computation complete - processor is free
+        end
+    end
+
     //Memory multiplexing
     //Objective is to select between the external loader and the internal processor
 
-    wire is_processing = start | !done;  //Flag which stays high when the core is in the middle of computation
-
-    //If we FFT computation is going on then choose the core read address else choose the external read address
+    //If FFT computation is going on then choose the core read address else choose the external read address
     wire [ADDR_WIDTH-1:0] final_rd_addr = (is_processing) ? core_rd_addr : ext_rd_addr;
 
     //Write MUX : During load, bit reverse address is used. During FFT, use core write address
