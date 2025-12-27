@@ -156,6 +156,7 @@ module fp4_fft_top #(
     input clk,
     input rst,
     input start,
+    input [ADDR_WIDTH-1:0] N_config,
     output done,
 
     //External interface for loading data
@@ -169,12 +170,14 @@ module fp4_fft_top #(
 );
     //Essential internal wires
     reg bank_sel;                   //Determines which bank is providing data and which bank receives the computed results
+    wire [7:0] mem_out_bus;
+    assign ext_rd_data = mem_out_bus;
 
     //Allows core and AGU to interact
     wire next_step;
-    wire done_stage;
+    wire [2:0] done_stage;
     wire done_fft_agu;
-    wire curr_stage;
+    wire [2:0] curr_stage;
 
     wire [ADDR_WIDTH-1:0] idx_a;
     wire [ADDR_WIDTH-1:0] idx_b;
@@ -199,13 +202,14 @@ module fp4_fft_top #(
     );
 
     //Instantiating the Address Generation Unit(AGU)
-    fft_agu_dit #(
+    fft_agu_dit_modified #(
         .MAX_N(MAX_N),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) agu_inst(
         .clk(clk),
         .reset(rst),
         .next_step(next_step),
+        .N_config(N_config),
         .idx_a(idx_a),
         .idx_b(idx_b),
         .k(k_idx),
@@ -225,7 +229,7 @@ module fp4_fft_top #(
         .start(start),
         .done_fft(done),                     //Global done signal
         .int_rd_addr(core_rd_addr),          //Drives memory read
-        .int_rd_data(ext_rd_data),           //Receives data from the memory
+        .int_rd_data(mem_out_bus),           //Receives data from the memory
         .int_wr_addr(core_wr_addr),          //Drives memory write
         .int_wr_data(core_wr_data),          //Drives result to memory
         .int_wr_en(core_wr_en),              //Write enable
