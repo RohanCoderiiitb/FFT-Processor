@@ -61,18 +61,18 @@ module fft_agu_dit_modified #(
     //twiddle logic:
     // DIT Twiddle depends on the stage.
     // k_factor scales the loop counter 'butterfly' to the full N range
-    // k = butterfly * (N / (2 * stride))
+    // k = butterfly * stride
     // We use EFFECTIVE_N here to ensure scaling works for any parameter N
-    wire [ADDR_WIDTH-1:0] k_idx = butterfly * (N_config / group_size);
+    wire [ADDR_WIDTH-1:0] k_idx = butterfly * stride;
 
-    assign k = butterfly; // Assign internal wire to output port
+    assign k = k_idx; // Assign internal wire to output port
 
     twiddle_factor #(
         .MAX_N(MAX_N),  // Pass the actual parameter
         .ADDR_WIDTH(ADDR_WIDTH)
     ) tw_rom (
-        .k(butterfly),
-        .n(group_size[ADDR_WIDTH-1:0]), // Truncate to proper width
+        .k(k_idx),
+        .n(N_config), // Use N_config for twiddle period
         .twiddle_out(twiddle_output)
     );
 
@@ -94,7 +94,7 @@ module fft_agu_dit_modified #(
             done_stage <= 0; //default low
 
             //1. butterfly loop (innermost)
-            if (butterfly < stride - 1) begin // Fixed: Use < for 0-indexed count
+            if (butterfly < stride-1) begin // Fixed: Use < stride for 0 to stride-1
                 butterfly <= butterfly + 1;
             end else begin
                 //end of group, we have to reset butterfly once it has iterated through all the elements of the stride
