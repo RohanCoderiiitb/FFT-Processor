@@ -11,7 +11,7 @@ module tb_fft;
     reg clk;
     reg rst;
     reg start;
-    reg [ADDR_WIDTH:0] N_config; // Supports up to 32
+    //reg [ADDR_WIDTH:0] N_config; // Supports up to 32
     reg ext_wr_en;
     reg [ADDR_WIDTH-1:0] ext_wr_addr;
     reg [7:0] ext_wr_data;
@@ -38,7 +38,7 @@ module tb_fft;
         .clk(clk), 
         .rst(rst), 
         .start(start), 
-        .N_config(N_config[ADDR_WIDTH-1:0]),
+        //.N_config(N_config[ADDR_WIDTH-1:0]),
         .done(done), 
         .ext_wr_en(ext_wr_en), 
         .ext_wr_addr(ext_wr_addr), 
@@ -55,6 +55,21 @@ module tb_fft;
              uut.is_processing, 
              uut.fft_core_inst.int_rd_addr, 
              uut.fft_core_inst.int_rd_data);
+    end
+
+    always @(posedge clk) begin
+    if (uut.next_step)
+        $display("Time: %0t | *** next_step PULSE *** | butterfly=%d, group=%d, stride=%d, stage=%d, done_fft_agu=%b", 
+                 $time, uut.agu_inst.butterfly, uut.agu_inst.group, 
+                 uut.agu_inst.stride, uut.agu_inst.curr_stage, uut.agu_inst.done_fft);
+                 end
+
+    always @(posedge clk) begin
+        if (uut.is_processing)  // Only print when FFT is running
+        $display("Time: %0t | AGU: idx_a=%d, idx_b=%d, butterfly=%d, group=%d, stride=%d, reset=%b", 
+            $time, uut.agu_inst.idx_a, uut.agu_inst.idx_b, 
+            uut.agu_inst.butterfly, uut.agu_inst.group, 
+            uut.agu_inst.stride, rst);
     end
 
     // Clock generation
@@ -148,7 +163,7 @@ module tb_fft;
 
         // TEST 1: 32-Point FFT Impulse
         $display("\n--- Test 1: 32-point Impulse FFT ---");
-        N_config = 32; 
+        //N_config = 32; 
         init_test_impulse();
         load_input(32);
         
@@ -161,19 +176,19 @@ module tb_fft;
         verify_output(32, "32-point Impulse");
 
         // TEST 2: 8-Point FFT Impulse
-        $display("\n--- Test 2: 8-point Impulse FFT (Dynamic N) ---");
-        reset_sys(); // Reset to clear memory/banks
-        N_config = 8;
-        init_test_impulse(); 
-        load_input(8);
+        // $display("\n--- Test 2: 8-point Impulse FFT (Dynamic N) ---");
+        // reset_sys(); // Reset to clear memory/banks
+        // N_config = 8;
+        // init_test_impulse(); 
+        // load_input(8);
         
-        start = 1;
-        @(negedge clk);
-        start = 0;
+        // start = 1;
+        // @(negedge clk);
+        // start = 0;
         
-        wait(done == 1'b1);
-        capture_output(8);
-        verify_output(8, "8-point Impulse");
+        // wait(done == 1'b1);
+        // capture_output(8);
+        // verify_output(8, "8-point Impulse");
 
         $display("\nFinal Results: %0d Passed, %0d Failed", test_pass, test_fail);
         $finish;

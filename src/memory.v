@@ -54,7 +54,15 @@ module fp4_fft_memory_reg (
     end
 
     //read logic: port 0 reads from same bank as bank_sel
-    assign rd_data_0 = bank_sel ? bank1_mem[rd_addr_0] : bank0_mem[rd_addr_0];
+    // ✅ CORRECT: synchronous read (1-cycle latency)
+    reg [7:0] rd_data_reg;
+    always @(posedge clk or negedge rst) begin
+        if (!rst) rd_data_reg <= 8'b0;
+        else rd_data_reg <= bank_sel ? bank1_mem[rd_addr_0] : bank0_mem[rd_addr_0];
+    end
+
+assign rd_data_0 = rd_data_reg;
+
 
 endmodule
 

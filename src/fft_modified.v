@@ -26,7 +26,7 @@ module fp4_fft_core #(
     input wire [ADDR_WIDTH-1:0] idx_b,              //Addresses for the input B given by the AGU
     input wire [7:0] twiddle_in,                    //Complex twiddle input for the current butterfly
     input wire done_fft_agu,                        //Signal from AGU indicating that all stages are over
-    output wire next_step                           //Signal sent by core to the AGU requesting for the next pair
+    output reg next_step                           //Signal sent by core to the AGU requesting for the next pair
 ); 
     
     //FSM state encodings - defines each state and respective encoding
@@ -57,8 +57,8 @@ module fp4_fft_core #(
     wire [7:0] outX;
     wire [7:0] outY;
 
-    reg next_step_reg;
-    assign next_step = next_step_reg;
+    // reg next_step_reg;
+    // assign next_step = next_step_reg;
 
     //Instantiation of butterfly unit
     fp4_butterfly butterfly_inst(
@@ -119,12 +119,12 @@ module fp4_fft_core #(
     always @(posedge clk or negedge rst) begin
         if (!rst) butterfly_valid <= 1'b0;
         else if (present_state == COMPUTE) butterfly_valid <= 1'b1;
-        else butterfly_valid <= 1'b0;
+        else if (present_state == UPDATE_AGU) butterfly_valid <= 1'b0;
     end
 
     always @(posedge clk or negedge rst) begin
-        if (!rst) next_step_reg <= 1'b0;
-        else next_step_reg <= (present_state == WRITE_Y);
+        if (!rst) next_step <= 1'b0;
+        else next_step <= (present_state == UPDATE_AGU);
     end
 
     //Next state logic
@@ -136,7 +136,6 @@ module fp4_fft_core #(
         int_wr_addr = idx_a;
         int_wr_data = 8'b0;
         int_wr_en = 1'b0;
-        //next_step = 1'b0;
 
         case(present_state)
             IDLE: begin
@@ -207,7 +206,7 @@ module fp4_fft_top #(
     input clk,
     input rst,
     input start,
-    input [ADDR_WIDTH-1:0] N_config,
+    //input [ADDR_WIDTH-1:0] N_config,
     output done,
 
     //External interface for loading data
@@ -253,14 +252,14 @@ module fp4_fft_top #(
     );
 
     //Instantiating the Address Generation Unit(AGU)
-    fft_agu_dit_modified #(
+    fft_agu_dit #(
         .MAX_N(MAX_N),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) agu_inst(
         .clk(clk),
         .reset(rst),
         .next_step(next_step),
-        .N_config(N_config),
+        //.N_config(N_config),
         .idx_a(idx_a),
         .idx_b(idx_b),
         .k(k_idx),
