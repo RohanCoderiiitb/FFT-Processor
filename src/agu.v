@@ -92,7 +92,7 @@ module fft_agu_dit #(
             done_stage <= 0; //default low
 
             //1. butterfly loop (innermost)
-            if (butterfly < stride - 1) begin // Fixed: Use < for 0-indexed count
+            if (butterfly < stride) begin // Fixed: Use < for 0-indexed count
                 butterfly <= butterfly + 1;
             end else begin
                 //end of group, we have to reset butterfly once it has iterated through all the elements of the stride
@@ -180,7 +180,7 @@ module address_generation_unit_DIF #(
         else if(next_step && !done) begin
             
             //1. Check if all the butterflies have been generated
-            if(butterfly < stride-1) begin
+            if(butterfly < stride) begin
                 butterfly <= butterfly + 1;
             end
 

@@ -63,7 +63,7 @@ module fft_agu_dit_modified #(
     // k_factor scales the loop counter 'butterfly' to the full N range
     // k = butterfly * stride
     // We use EFFECTIVE_N here to ensure scaling works for any parameter N
-    wire [ADDR_WIDTH-1:0] k_idx = butterfly * stride;
+    wire [ADDR_WIDTH-1:0] k_idx = butterfly * (N_config / group_size);
 
     assign k = k_idx; // Assign internal wire to output port
 
@@ -94,7 +94,7 @@ module fft_agu_dit_modified #(
             done_stage <= 0; //default low
 
             //1. butterfly loop (innermost)
-            if (butterfly < stride-1) begin // Fixed: Use < stride for 0 to stride-1
+            if (butterfly < stride) begin // Fixed: Use < stride for 0 to stride-1
                 butterfly <= butterfly + 1;
             end else begin
                 //end of group, we have to reset butterfly once it has iterated through all the elements of the stride
