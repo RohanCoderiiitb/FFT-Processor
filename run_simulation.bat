@@ -9,7 +9,7 @@ echo.
 
 REM Clean previous build files
 if exist sim.vvp del sim.vvp
-if exist dft_waveform.vcd del dft_waveform.vcd
+if exist fft_waveform.vcd del fft_waveform.vcd
 
 echo Compiling Verilog files...
 echo.
@@ -18,9 +18,12 @@ REM Compile all modules from src and tb directories
 iverilog -o sim.vvp ^
     src/multiplier.v ^
     src/adder.v ^
-    src/memory.v ^
-    src/dft.v ^
-    tb/tb_dft.v
+    src/memory_shaivi.v ^
+    src/twiddle_rom.v ^
+    src/butterfly.v ^
+    src/agu.v ^
+    src/fft_shaivi.v ^
+    tb/tb_fft_shaivi.v 
 
 REM Check if compilation was successful
 if %ERRORLEVEL% NEQ 0 (
