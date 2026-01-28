@@ -4,7 +4,7 @@ module twiddle_factor #(
     parameter ADDR_WIDTH = $clog2(MAX_N)
 )(
     input [ADDR_WIDTH-1:0] k, //index to select the twiddle factor
-    input [ADDR_WIDTH-1:0] n,     //total number of points in the DFT
+    input [ADDR_WIDTH:0] n,     //total number of points in the DFT
     output reg [7:0] twiddle_out //8-bit output representing the complex twiddle factor, upper 4 bits are real part, lower 4 bits are imaginary part
 );
     // compute normalized angle: theta = 2*pi*k/N
@@ -87,7 +87,7 @@ module twiddle_factor #(
             // Flip sign by: if imag != 0, change the sign bit (MSB of the 4-bit imaginary part)
             if (twiddle_out[3:0] != 4'b0000) begin
                 twiddle_out[3:0] = {~twiddle_out[3], twiddle_out[2:0]}; // Flip sign bit of imaginary part
-            end
+            end 
         end
     end
 endmodule

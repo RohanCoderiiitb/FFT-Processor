@@ -161,29 +161,21 @@ module fp4_fft_core #(
                 next_state = COMPUTE;
             end
             COMPUTE: begin
-                //outX_reg = outX;
-                //outY_reg = outY;
-                //butterfly_valid = 1'b1;
                 next_state = WRITE_X;
             end
             WRITE_X: begin
-                if (butterfly_valid) begin
-                    int_wr_en   = 1'b1;
-                    int_wr_addr = idx_a_reg;
-                    int_wr_data = outX_reg;
-                    next_state  = WRITE_Y;
-                end
+                int_wr_en   = 1'b1;
+                int_wr_addr = idx_a_reg;
+                int_wr_data = outX_reg;
+                next_state  = WRITE_Y;
             end  
             WRITE_Y: begin
-                if (butterfly_valid) begin
-                    int_wr_en   = 1'b1;
-                    int_wr_addr = idx_b_reg;
-                    int_wr_data = outY_reg;
-                    next_state  = UPDATE_AGU;
-                end
+                int_wr_en   = 1'b1;
+                int_wr_addr = idx_b_reg;
+                int_wr_data = outY_reg;
+                next_state  = UPDATE_AGU;
             end 
             UPDATE_AGU: begin 
-                //next_step = 1'b1;            //Triggering AGU butterfly increment
                 next_state = FETCH_A;
             end
             FINISH: begin
@@ -191,7 +183,6 @@ module fp4_fft_core #(
             end
             default: begin
                 next_state = IDLE;
-                //butterfly_valid = 1'b0;
             end
         endcase
     end
@@ -206,7 +197,7 @@ module fp4_fft_top #(
     input clk,
     input rst,
     input start,
-    //input [ADDR_WIDTH-1:0] N_config,
+    input [ADDR_WIDTH:0] N_config,
     output done,
 
     //External interface for loading data
@@ -252,14 +243,14 @@ module fp4_fft_top #(
     );
 
     //Instantiating the Address Generation Unit(AGU)
-    fft_agu_dit #(
+    fft_agu_dit_variable #(
         .MAX_N(MAX_N),
         .ADDR_WIDTH(ADDR_WIDTH)
     ) agu_inst(
         .clk(clk),
         .reset(rst),
         .next_step(next_step),
-        //.N_config(N_config),
+        .N(N_config),
         .idx_a(idx_a),
         .idx_b(idx_b),
         .k(k_idx),
@@ -308,6 +299,22 @@ module fp4_fft_top #(
         end
     end
 
+    // New register to track loading phase
+    reg loading_phase;
+    always @(posedge clk or negedge rst) begin
+        if (!rst) begin
+            loading_phase <= 1'b1;  // Start in loading phase
+        end 
+        else begin
+            if (ext_wr_en) begin
+                loading_phase <= 1'b1;  // Any external write means we're loading
+            end
+            if (start && load_done) begin
+                loading_phase <= 1'b0;  // FFT starts, end loading phase
+            end
+        end
+    end
+
     //Memory multiplexing
     //Objective is to select between the external loader and the internal processor
 
@@ -319,11 +326,14 @@ module fp4_fft_top #(
     wire [7:0] final_wr_data = (ext_wr_en) ? ext_wr_data : core_wr_data;
     wire final_wr_en = ext_wr_en | core_wr_en;
 
+    // Force bank_sel to 1 during loading so memory writes go to bank0
+    wire actual_bank_sel_for_mem = (loading_phase) ? 1'b1 : bank_sel;
+
     //Ping Pong Memory instantiation
     fp4_fft_memory_reg memory_inst(
         .clk(clk),
         .rst(rst),
-        .bank_sel(bank_sel),
+        .bank_sel(actual_bank_sel_for_mem),
         .rd_addr_0(final_rd_addr),
         .rd_data_0(mem_out_bus),
         .wr_en_1(final_wr_en),
@@ -336,14 +346,18 @@ module fp4_fft_top #(
     reg load_done;
     always @(posedge clk or negedge rst) begin
         if (!rst) load_done <= 1'b0;
-        else if (ext_wr_en) load_done <= 1'b1;
-        else if (start) load_done <= 1'b0;
+        else begin
+            if(ext_wr_en) begin
+                load_done <= 1'b1;
+            end
+            if(start && load_done) begin
+                load_done <= 1'b0;
+            end
+        end
     end
-
     always @(posedge clk or negedge rst) begin
-        if (!rst) bank_sel <= 1'b0;
-        else if (load_done && start) bank_sel <= ~bank_sel;   // ONE-TIME switch after load
-        else if (done_stage) bank_sel <= ~bank_sel;   // normal ping-pong
+        if(!rst) bank_sel <= 1'b0;
+        else if(done_stage) bank_sel <= ~bank_sel;
     end
 
 endmodule

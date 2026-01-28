@@ -70,7 +70,7 @@ module fft_agu_dit #(
         .ADDR_WIDTH(ADDR_WIDTH)
     ) tw_rom (
         .k(k_idx),
-        .n(group_size[ADDR_WIDTH-1:0]), // Truncate to proper width
+        .n(group_size[ADDR_WIDTH:0]), // Truncate to proper width
         .twiddle_out(twiddle_output)
     );
 
@@ -92,7 +92,7 @@ module fft_agu_dit #(
             done_stage <= 0; //default low
 
             //1. butterfly loop (innermost)
-            if (butterfly < stride) begin // Fixed: Use < for 0-indexed count
+            if (butterfly <= stride - 1) begin // Fixed: Use < for 0-indexed count
                 butterfly <= butterfly + 1;
             end else begin
                 //end of group, we have to reset butterfly once it has iterated through all the elements of the stride
@@ -161,7 +161,7 @@ module address_generation_unit_DIF #(
         .ADDR_WIDTH(5)
     ) tw_rom (
         .k(butterfly),
-        .n(rom_N[4:0]), // Truncate to 5 bits to match port width
+        .n(rom_N[5:0]), // Truncate to 5 bits to match port width
         .twiddle_out(twiddle_output)
     );
 
@@ -219,7 +219,7 @@ module fft_agu_dit_variable #(
 )(
     input clk,
     input reset,
-    input wire [ADDR_WIDTH-1:0] N, //runtime N value
+    input wire [ADDR_WIDTH:0] N, //runtime N value
     input wire next_step, //pulse from core to advance one butterfly
 
     output [ADDR_WIDTH-1:0] idx_a, //address for input A into butterfly unit
@@ -237,10 +237,10 @@ module fft_agu_dit_variable #(
     reg [2:0] total_stages;
     always @(*) begin
         case(N)
-            5'd4:  total_stages = 3'd2;
-            5'd8:  total_stages = 3'd3;
-            5'd16: total_stages = 3'd4;
-            5'd32: total_stages = 3'd5;
+            6'd4:  total_stages = 3'd2;
+            6'd8:  total_stages = 3'd3;
+            6'd16: total_stages = 3'd4;
+            6'd32: total_stages = 3'd5;
             default: total_stages = 3'd0; //invalid
         endcase
     end

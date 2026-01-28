@@ -42,7 +42,7 @@ module fp4_mul(
         if(a_zero || b_zero || exp_norm<0) begin
             output_reg = 4'b0000;
         end
-        else if(exp_norm > 3) begin
+        else if(exp_norm > 2'b11 || exp_norm == 2'b11 && mant_out) begin
             output_reg = {sign_out, 2'b11, 1'b1};
         end
         else begin
